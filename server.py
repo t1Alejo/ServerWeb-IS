@@ -31,7 +31,27 @@ def app(environ, start_response):
             status == "200 OK"
             start_response(status, headers)
             return [json.dumps(tasks).encode("utf-8")]
+            
+    elif verb == "POST":
+        content_length = int(environ.get("CONTENT_LENGTH", 0))
+        body = environ ["wsgi.input"].read(content_length)
 
+        data = json.loads(body)
+        global ID
+        ID+= 1
+        nuevatask = {
+            "id": ID,
+            "title": data.get("title", "Sin título"),
+            "done": data.get("done", False)
+        }
+        tasks.append(nuevatask)
+        status = "201 Created"
+        response_body = json.dumps(nuevatask).encode("utf-8")
+        headers = [("Content-Type", "application/json"),("Content-length", str(len(response_body)))]
+
+        start_response(status, headers)
+        return [response_body]
+        
 with make_server('', 9292, app) as httpd:
     print("Serving on port 9292...")
     httpd.serve_forever()
